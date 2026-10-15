@@ -1,0 +1,19 @@
+services:
+  - type: worker
+    name: osonfanbot
+    runtime: docker
+    plan: starter
+    numInstances: 1
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_IDS
+        value: "247126354"
+      - key: WEBAPP_URL
+        value: ""
+    disk:
+      name: osonfanbot-data
+      mountPath: /app/data
+      sizeGB: 1

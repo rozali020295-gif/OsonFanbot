@@ -1,7 +1,9 @@
 import asyncio
+import logging
 import os
 import sqlite3
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
@@ -14,7 +16,7 @@ DB = BASE / "data" / "osonfan.db"
 DB.parent.mkdir(exist_ok=True)
 TOKEN = os.getenv("BOT_TOKEN", "").strip()
 ADMINS = {int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip().isdigit()}
-WEBAPP_URL = os.getenv("WEBAPP_URL", "http://localhost:8000")
+WEBAPP_URL = os.getenv("WEBAPP_URL", "").strip()
 
 def db():
     con = sqlite3.connect(DB)
@@ -66,6 +68,10 @@ async def newest(message: types.Message):
 
 @dp.message(F.text == "📝 Test ishlash")
 async def tests(message: types.Message):
+    url = urlsplit(WEBAPP_URL)
+    if url.scheme != "https" or not url.netloc:
+        await message.answer("Testlar bo‘limi hozircha tayyorlanmoqda. Boshqa bo‘limlardan foydalanishingiz mumkin.")
+        return
     await message.answer("Testlar bo‘limi Mini App orqali ishlaydi.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="📝 Mini Appni ochish", web_app=WebAppInfo(url=WEBAPP_URL))]]))
 
 @dp.message(F.text == "❓ Yordam")
@@ -95,6 +101,7 @@ async def material(callback: types.CallbackQuery):
     await callback.message.answer(text, parse_mode="HTML"); await callback.answer()
 
 async def main():
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     if not TOKEN: raise RuntimeError("BOT_TOKEN environment o‘zgaruvchisi kiritilmagan")
     await dp.start_polling(Bot(TOKEN))
 
